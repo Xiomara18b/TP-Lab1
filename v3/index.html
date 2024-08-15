@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Medallas Olímpicas</title>
+    <!-- Enlace a Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Registro de Medallas Olímpicas</h1>
+        
+        <!-- Formulario para registrar medallas -->
+        <form id="medalForm">
+            <div class="mb-3">
+                <label for="country" class="form-label">País:</label>
+                <input type="text" class="form-control" id="country" name="country" required>
+            </div>
+            <div class="mb-3">
+                <label for="gold" class="form-label">Medallas de Oro:</label>
+                <input type="number" class="form-control" id="gold" name="gold" min="0" required>
+            </div>
+            <div class="mb-3">
+                <label for="silver" class="form-label">Medallas de Plata:</label>
+                <input type="number" class="form-control" id="silver" name="silver" min="0" required>
+            </div>
+            <div class="mb-3">
+                <label for="bronze" class="form-label">Medallas de Bronce:</label>
+                <input type="number" class="form-control" id="bronze" name="bronze" min="0" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Añadir Medallas</button>
+        </form>
+
+        <!-- Tabla para mostrar medallas -->
+        <table class="table table-striped mt-4">
+            <thead>
+                <tr>
+                    <th>País</th>
+                    <th>Oro</th>
+                    <th>Plata</th>
+                    <th>Bronce</th>
+                </tr>
+            </thead>
+            <tbody id="medalTableBody">
+                <!-- Las filas se agregarán aquí mediante JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Enlace a Bootstrap JS y dependencias (Popper.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.min.js"></script>
+
+    <!-- Script para manejar el formulario -->
+    <script>
+        document.getElementById('medalForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(this);
+
+            fetch('save_medals.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(result => {
+                if (result === 'success') {
+                    loadMedals();
+                    document.getElementById('medalForm').reset();
+                } else {
+                    alert('Error al guardar los datos');
+                }
+            });
+        });
+
+        function loadMedals() {
+            fetch('get_medals.php')
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById('medalTableBody');
+                    tableBody.innerHTML = '';
+                    data.forEach(row => {
+                        const newRow = tableBody.insertRow();
+                        newRow.insertCell().textContent = row.country;
+                        newRow.insertCell().textContent = row.gold;
+                        newRow.insertCell().textContent = row.silver;
+                        newRow.insertCell().textContent = row.bronze;
+                    });
+                });
+        }
+
+        // Cargar medallas al cargar la página
+        loadMedals();
+    </script>
+</body>
+</html>
