@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Medallas Olímpicas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #f4b942;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        form {
+            margin-top: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Registro de Medallas Olímpicas</h1>
+        <form id="medalForm">
+            <label for="country">País:</label>
+            <input type="text" id="country" name="country" required>
+
+            <label for="gold">Medallas de Oro:</label>
+            <input type="number" id="gold" name="gold" min="0" required>
+
+            <label for="silver">Medallas de Plata:</label>
+            <input type="number" id="silver" name="silver" min="0" required>
+
+            <label for="bronze">Medallas de Bronce:</label>
+            <input type="number" id="bronze" name="bronze" min="0" required>
+
+            <input type="submit" value="Añadir Medallas">
+        </form>
+
+        <table id="medalTable">
+            <thead>
+                <tr>
+                    <th>País</th>
+                    <th>Oro</th>
+                    <th>Plata</th>
+                    <th>Bronce</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Las filas se agregarán aquí mediante JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.getElementById('medalForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const country = document.getElementById('country').value;
+            const gold = document.getElementById('gold').value;
+            const silver = document.getElementById('silver').value;
+            const bronze = document.getElementById('bronze').value;
+            
+            const tableBody = document.getElementById('medalTable').getElementsByTagName('tbody')[0];
+            
+            const newRow = tableBody.insertRow();
+            
+            newRow.insertCell().textContent = country;
+            newRow.insertCell().textContent = gold;
+            newRow.insertCell().textContent = silver;
+            newRow.insertCell().textContent = bronze;
+            
+            // Limpiar el formulario después de añadir los datos
+            document.getElementById('medalForm').reset();
+        });
+    </script>
+</body>
+</html>
