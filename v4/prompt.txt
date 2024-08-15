@@ -1,0 +1,243 @@
+CREATE TABLE medals (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    country VARCHAR(100) NOT NULL,
+    gold INT NOT NULL,
+    silver INT NOT NULL,
+    bronze INT NOT NULL
+);
+
+<dependencies>
+    <!-- Dependency for H2 Database -->
+    <dependency>
+        <groupId>com.h2database</groupId>
+        <artifactId>h2</artifactId>
+        <version>2.1.214</version>
+    </dependency>
+
+    <!-- Dependency for Servlet API -->
+    <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>javax.servlet-api</artifactId>
+        <version>4.0.1</version>
+        <scope>provided</scope>
+    </dependency>
+</dependencies>
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class DatabaseUtil {
+    private static final String JDBC_URL = "jdbc:h2:~/test";
+    private static final String USER = "sa";
+    private static final String PASSWORD = "";
+
+    public static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(JDBC_URL, USER, PASSWORD);
+    }
+}
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet("/save_medals")
+public class SaveMedalsServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String country = request.getParameter("country");
+        int gold = Integer.parseInt(request.getParameter("gold"));
+        int silver = Integer.parseInt(request.getParameter("silver"));
+        int bronze = Integer.parseInt(request.getParameter("bronze"));
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("INSERT INTO medals (country, gold, silver, bronze) VALUES (?, ?, ?, ?)")) {
+
+            stmt.setString(1, country);
+            stmt.setInt(2, gold);
+            stmt.setInt(3, silver);
+            stmt.setInt(4, bronze);
+
+            int rowsAffected = stmt.executeUpdate();
+            response.getWriter().write(rowsAffected > 0 ? "success" : "failure");
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            response.getWriter().write("error");
+        }
+    }
+}
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import com.google.gson.Gson;
+import java.util.ArrayList;
+import java.util.List;
+
+@WebServlet("/get_medals")
+public class GetMedalsServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        List<Medal> medals = new ArrayList<>();
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM medals")) {
+
+            while (rs.next()) {
+                Medal medal = new Medal();
+                medal.setCountry(rs.getString("country"));
+                medal.setGold(rs.getInt("gold"));
+                medal.setSilver(rs.getInt("silver"));
+                medal.setBronze(rs.getInt("bronze"));
+                medals.add(medal);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        response.setContentType("application/json");
+        PrintWriter out = response.getWriter();
+        Gson gson = new Gson();
+        out.print(gson.toJson(medals));
+        out.flush();
+    }
+
+    private class Medal {
+        private String country;
+        private int gold;
+        private int silver;
+        private int bronze;
+
+        // Getters and setters
+        public String getCountry() { return country; }
+        public void setCountry(String country) { this.country = country; }
+        public int getGold() { return gold; }
+        public void setGold(int gold) { this.gold = gold; }
+        public int getSilver() { return silver; }
+        public void setSilver(int silver) { this.silver = silver; }
+        public int getBronze() { return bronze; }
+        public void setBronze(int bronze) { this.bronze = bronze; }
+    }
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Medallas Olímpicas</title>
+    <!-- Enlace a Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Registro de Medallas Olímpicas</h1>
+        
+        <!-- Formulario para registrar medallas -->
+        <form id="medalForm">
+            <div class="mb-3">
+                <label for="country" class="form-label">País:</label>
+                <input type="text" class="form-control" id="country" name="country" required>
+            </div>
+            <div class="mb-3">
+                <label for="gold" class="form-label">Medallas de Oro:</label>
+                <input type="number" class="form-control" id="gold" name="gold" min="0" required>
+            </div>
+            <div class="mb-3">
+                <label for="silver" class="form-label">Medallas de Plata:</label>
+                <input type="number" class="form-control" id="silver" name="silver" min="0" required>
+            </div>
+            <div class="mb-3">
+                <label for="bronze" class="form-label">Medallas de Bronce:</label>
+                <input type="number" class="form-control" id="bronze" name="bronze" min="0" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Añadir Medallas</button>
+        </form>
+
+        <!-- Tabla para mostrar medallas -->
+        <table class="table table-striped mt-4">
+            <thead>
+                <tr>
+                    <th>País</th>
+                    <th>Oro</th>
+                    <th>Plata</th>
+                    <th>Bronce</th>
+                </tr>
+            </thead>
+            <tbody id="medalTableBody">
+                <!-- Las filas se agregarán aquí mediante JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Enlace a Bootstrap JS y dependencias (Popper.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.min.js"></script>
+
+    <!-- Script para manejar el formulario -->
+    <script>
+        document.getElementById('medalForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(this);
+
+            fetch('save_medals', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(result => {
+                if (result === 'success') {
+                    loadMedals();
+                    document.getElementById('medalForm').reset();
+                } else {
+                    alert('Error al guardar los datos');
+                }
+            });
+        });
+
+        function loadMedals() {
+            fetch('get_medals')
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById('medalTableBody');
+                    tableBody.innerHTML = '';
+                    data.forEach(row => {
+                        const newRow = tableBody.insertRow();
+                        newRow.insertCell().textContent = row.country;
+                        newRow.insertCell().textContent = row.gold;
+                        newRow.insertCell().textContent = row.silver;
+                        newRow.insertCell().textContent = row.bronze;
+                    });
+                });
+        }
+
+        // Cargar medallas al cargar la página
+        loadMedals();
+    </script>
+</body>
+</html>
+
